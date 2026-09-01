@@ -12,7 +12,7 @@ to the [Clinker 68000](https://github.com/katmore/clinker-68000).
  - Serial RS-232 printer, drawn from the same 4-port pool
  - Dual 5.25" floppy bay, WD1793-class controller, standard soft-sectored format
  - MIDI output to an external synthesiser — one serial port plus an external
-   500 kHz ÷16 clock divider. No onboard synthesis (that is the 68000's job).
+   500 kHz ÷16 clock divider. No onboard synthesis.
 
 ## Technical Specifications
 See [docs/CLINKER-6502-SPEC.md](docs/CLINKER-6502-SPEC.md)

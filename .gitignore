@@ -1,0 +1,15 @@
+# Cargo build output
+/emulator/target/
+
+# Backup files from older rustfmt
+**/*.rs.bk
+
+# MSVC toolchain PDBs (harmless if never present on Linux)
+*.pdb
+
+# rust-analyzer / rustc incremental caches that occasionally land loose
+**/*.rmeta
+
+# Editor / OS cruft
+.DS_Store
+*.swp

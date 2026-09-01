@@ -1,0 +1,7 @@
+[package]
+name = "clinker6502-core"
+version = "0.0.1"
+edition = "2021"
+description = "Clinker 6502 emulator core — CPU, bus, and peripheral models."
+
+[dependencies]

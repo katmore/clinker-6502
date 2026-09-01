@@ -1,0 +1,13 @@
+[workspace]
+resolver = "2"
+members = ["crates/core"]
+
+# Phase plan (see docs/CLINKER-6502-SPEC.md):
+#   1. crates/core  — CPU skeleton (this phase)
+#   2. crates/core  — full instruction set, interrupts, Klaus Dormann test
+#   3. crates/core  — memory map + ROM load
+#   4. crates/core  — 4x 6551 ACIA + shared-IRQ aggregation
+#   5. crates/core  — WD1793 FDC + floppy images
+#   6. crates/core  — MIDI clock divider + port rate
+#   7. crates/core  — Machine assembly + crates/cli headless driver
+#   8. crates/ffi   — C ABI + cbindgen header for the GTK front end

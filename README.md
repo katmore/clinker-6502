@@ -1,7 +1,7 @@
 # Clinker 6502
 
 Introducing the Clinker 6502, a serial-terminal microcomputer. The predecessor
-to the Clinker 68000.
+to the [Clinker 68000](https://github.com/katmore/clinker-6502).
 
 ## Primary Features
  - MOS 6502 (NMOS), 2 MHz

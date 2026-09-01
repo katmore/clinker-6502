@@ -9,9 +9,9 @@ to the [Clinker 68000](https://github.com/katmore/clinker-68000).
  - Serial console over RS-232 — bring your own VT100-class terminal; no keyboard
    or display hardware onboard
  - 4× RS-232 serial ports, one MOS 6551 ACIA each, software-polled shared IRQ
- - Serial RS-232 printer, drawn from the same 4-port pool
+ - Serial RS-232 printer on one of those four ports (no dedicated printer port)
  - Dual 5.25" floppy bay, WD1793-class controller, standard soft-sectored format
- - MIDI output to an external synthesiser — one serial port plus an external
+ - MIDI output to an external synthesizer — one serial port plus an external
    500 kHz ÷16 clock divider. No onboard synthesis.
 
 ## Technical Specifications
@@ -23,7 +23,7 @@ See [docs/CLINKER-6502-SPEC.md](docs/CLINKER-6502-SPEC.md)
  - Supported Software
    - **Clinker MIDI Catalog**
      - Note: in development
-     - Flat-file catalogue — Name / Date / Kind / Size, sorted printout via the
+     - Flat-file catalog — Name / Date / Kind / Size, sorted printout via the
        serial printer port
  - Supported peripherals:
    - Any required for the *Primary Features* listed above
@@ -33,8 +33,8 @@ See [docs/CLINKER-6502-SPEC.md](docs/CLINKER-6502-SPEC.md)
 
 Copyright 2026 D.B.
 
-Licensed under the GNU General Public License v3.0. See [LICENSE](LICENSE) for
-the full text.
+Licensed under the GNU General Public License, version 3 or (at your option) any
+later version. See [LICENSE](LICENSE) for the full text.
 
 This program is free software: you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free Software

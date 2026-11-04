@@ -6,24 +6,37 @@ until this one has been lived with for a while.
 
 ## The point
 
-**The machine reads a MIDI file and plays it, making the sound itself.**
-Everything else exists to serve that.
+**Play any MIDI file found on the internet today, with the machine making the
+sound itself.** Everything else exists to serve that.
 
-## Scope
+## The fiction
 
-1. **CPU** — a 6502. It runs the player program that reads the MIDI file and
-   drives the sound hardware.
-2. **Sound** — an onboard synth chip of the early-to-mid-80s kind. This is what
-   turns notes into audio.
-3. **RS-232** — one serial port to a terminal, so you can type commands
-   ("play") and read messages.
+The hardware is mid-80s. Its ROM was last updated in 1991–92, and that update
+added a player for Standard MIDI Files with General MIDI instrument mapping.
+This is why a mid-80s machine understands file formats from 1988 (SMF) and
+1991 (General MIDI).
 
-RAM and ROM exist only because the CPU needs somewhere to run code and hold the
-file. They are not features.
+## Hardware
+
+| Part | Choice |
+|---|---|
+| CPU | One 6502, 2 MHz |
+| Sound | Yamaha OPL2 (YM3812), 1985: 9 FM voices, or 6 voices plus 5 drum sounds |
+| Serial | One UART to a terminal, used to type commands and read messages |
+| Memory | RAM and ROM, enough to run the player and hold a MIDI file |
+
+**Why the OPL2:**
+
+- It fits the era.
+- It's the chip DOS games used to play General MIDI music, so ready-made
+  General MIDI instrument tables already exist.
+- Its built-in timers can raise an IRQ, so they keep the tempo and no separate
+  timer chip is needed.
+- At 2 MHz, the 6502 keeps up with its slow register writes.
 
 ## Out of scope
 
-- MIDI in, and driving an external synth: the machine makes its own sound.
+- MIDI in, and driving an external synth.
 - Floppy drives, the printer, extra serial ports, the MIDI Catalog, bank
   switching, and clock-speed lore.
 
@@ -38,12 +51,16 @@ Each step ends with something that runs.
    headless runner steps the CPU.
 4. **Serial terminal.** One UART wired to stdin/stdout, plus a small ROM
    program that echoes what you type.
-5. **Sound chip.** Model the chip and send its output to the host's audio. A
-   ROM program plays a hard-coded scale.
-6. **MIDI file in memory.** Get a `.mid` file's bytes into the machine's RAM.
-7. **Player.** 6502 code parses the file, keeps the tempo with a timer, and
-   turns note-on and note-off events into sound-chip writes. You type `play`
-   at the terminal and hear the song.
+5. **OPL2.** Model the chip, including its timers and IRQ, and send its output
+   to the host's audio. A ROM program plays a hard-coded scale.
+6. **MIDI file in memory.** Get a `.mid` file's bytes into RAM.
+7. **Player.** 6502 code that:
+   - reads Type 0 and Type 1 files, merging the tracks
+   - keeps the tempo from the OPL2's timer IRQ
+   - maps General MIDI instruments and drums onto OPL2 sounds
+   - steals voices when more than 9 notes sound at once
+
+   You type `play` at the terminal and hear the song.
 
 After step 7, decide what to do next.
 
@@ -51,20 +68,13 @@ After step 7, decide what to do next.
 
 Decide these when the code reaches them, not before.
 
-- **Sound chip.** Candidates:
-  - SID (1982): 3 voices, rich sound.
-  - AY-3-8910 / YM2149: 3 square-wave voices, simple.
-  - Yamaha FM (YM2151, or the later YM2612): 8 or 6 voices, the mid-80s
-    synth sound.
-
-  More voices make MIDI playback easier, because songs often have more than
-  3 notes sounding at once.
 - **Getting the file in.** Options:
   - the emulator loads it straight into RAM (simplest)
   - send it over the serial port (XMODEM, the period-authentic way)
   - add storage later
-- **MIDI file types.** Type 0 (one track) only to start, or Type 1 as well
-  (multiple tracks, which need merging at play time).
-- **Timer.** Where the tempo clock comes from: the sound chip's own timer, the
-  UART, or a separate timer chip.
+- **Big files.** Most MIDI files are 5–60 KB. Decide whether to refuse files
+  that don't fit in RAM, or to read them in pieces.
+- **UART chip.** The 6551 (the 6502's companion part) or something else.
+- **Instrument table.** Which existing General MIDI instrument set for the OPL2
+  to base ours on.
 - **Memory map.** Pick the smallest layout that works when step 3 arrives.

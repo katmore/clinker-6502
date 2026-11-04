@@ -11,7 +11,7 @@ sound itself.** Everything else exists to serve that.
 
 ## The fiction
 
-- **1985:** the machine ships with a 6502, a slot bus, a serial card, and an
+- **1985:** the machine ships with a 6502, an expansion bus, a serial card, and an
   AY-3-8910 sound card (3 voices).
 - **1992:** a hardware and ROM upgrade. The AY card is pulled and an OPL3 card
   goes in its slot. A file-memory card is added. The new ROM plays Standard
@@ -28,21 +28,50 @@ This explains how a mid-80s design plays file formats from 1988 (SMF) and 1991
 |---|---|
 | CPU | One 6502, 2 MHz |
 | Main memory | RAM plus the 1992 ROM |
-| Bus | Apple II-style slot bus, 4 slots |
+| Bus | Slotted expansion bus, 4 slots. The motherboard decodes addresses |
 | Slot card: serial | One UART to a terminal. Used for commands and for uploading files |
 | Slot card: file memory | 1 MB, outside the CPU's address space. Holds the song |
 | Slot card: sound | Yamaha OPL3 (YMF262), 1990: 18 FM voices, stereo |
 
-### Slot bus
+### Expansion bus
 
-Modelled on the Apple II's 6502-native slot bus (1977), where cards were
-routinely swapped, sound cards included.
+Every slot carries the same raw 6502 signals: address lines, data lines,
+read/write, clock, and IRQ. The approach is the Apple II's (1977), whose slots
+were filled with cards from Apple, third-party makers, and clone makers alike.
 
-- Each slot gets its own small I/O window.
-- Each card has a fixed **ID byte**. At boot, the ROM checks every slot and
-  uses the right driver for each card it finds.
+- **The motherboard decodes addresses.** One decoder chip (a 74HC138) watches
+  the address lines. When the CPU touches a slot's addresses, the decoder
+  switches on that slot's **select wire**.
+- **Each slot gets its own 16 addresses** in the I/O area. Exact addresses get
+  decided along with the memory map.
+- **Cards stay simple.** A card connects the select wire straight to its main
+  chip's chip-select pin, and the lowest 4 address lines pick the register.
+  Cards need no decoding chips of their own.
+- **Fixed slot assignments.** Every card always goes in the same slot, so the
+  ROM simply knows where each card is and nothing gets detected at boot. Code
+  writes to a card with a plain fixed address (for example `STA $C0C0`).
+- **One shared IRQ line.** Any card can pull it to ask for attention. The CPU
+  then checks each card's status register to see which card it was. Nothing
+  needs jumpering.
 
-This also keeps the emulator code tidy, with one module per card.
+| Slot | Card |
+|---|---|
+| 1 | Serial |
+| 2 | File memory |
+| 3 | Sound |
+| 4 | Empty |
+
+**Why the motherboard decodes:** it's one decoder chip for the whole machine,
+rather than one or two on every card. That means less hardware in total,
+simpler cards, and all the address logic in one place when something needs
+debugging. In the emulator, each card is one module, and its address range
+comes from its slot number.
+
+**For a real build:** the breadboard 6502 walkthroughs already decode RAM, ROM,
+and I/O with a few logic gates. Adding the '138 to the I/O part of that logic
+and running its outputs to slot connectors is the step from there to this bus.
+Several cards on the bus may also need a buffer chip (such as a 74HC245) on
+the data lines.
 
 ### File memory card
 
@@ -70,6 +99,9 @@ change later.
   voices and stereo can come later.
 - Its built-in timers can raise an IRQ, so they keep the song's tempo and no
   separate timer chip is needed.
+- **For a real build:** the chip is out of production, but used and pulled
+  chips are easy to find. It needs a companion chip (the YAC512) to turn its
+  output into audio.
 
 ### Getting songs in
 
@@ -122,8 +154,8 @@ Each step ends with something that runs.
 1. **CPU skeleton.** Done: registers, bus trait, opcode decode, reset.
 2. **CPU complete.** All official opcodes and real IRQ/NMI/BRK. Passes the
    Klaus Dormann functional test.
-3. **Minimal machine.** Main RAM + ROM, the slot bus with its card ID bytes,
-   and a headless runner that steps the CPU.
+3. **Minimal machine.** Main RAM + ROM, the expansion bus with its slot
+   decoding, and a headless runner that steps the CPU.
 4. **Serial card.** Wired to stdin/stdout, plus a small ROM program that
    echoes what you type.
 5. **Sound card.** Model the OPL3, starting in its 9-voice OPL2 mode with its

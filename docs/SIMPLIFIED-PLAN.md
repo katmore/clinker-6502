@@ -13,8 +13,8 @@ sound itself.** Everything else exists to serve that.
 
 - **1985:** the machine ships with a 6502, an expansion bus, a serial card, and an
   AY-3-8910 sound card (3 voices).
-- **1992:** a hardware and ROM upgrade. The AY card is pulled and an OPL3 card
-  goes in its slot. A file-memory card is added. The new ROM plays Standard
+- **1992:** a hardware and ROM upgrade. The AY card is pulled and a dual-OPL2
+  card goes in its slot. A file-memory card is added. The new ROM plays Standard
   MIDI Files with General MIDI instrument mapping.
 
 This explains how a mid-80s design plays file formats from 1988 (SMF) and 1991
@@ -31,7 +31,7 @@ This explains how a mid-80s design plays file formats from 1988 (SMF) and 1991
 | Bus | Slotted expansion bus, 4 slots. The motherboard decodes addresses |
 | Slot card: serial | One UART to a terminal. Used for commands and for uploading files |
 | Slot card: file memory | 1 MB, outside the CPU's address space. Holds the song |
-| Slot card: sound | Yamaha OPL3 (YMF262), 1990: 18 FM voices, stereo |
+| Slot card: sound | Two Yamaha OPL2s (YM3812): 18 FM voices, one chip on the left and one on the right |
 
 ### Expansion bus
 
@@ -91,17 +91,55 @@ change later.
 
 ### Sound card
 
-**The OPL3 (YMF262):**
+**Two OPL2s (YM3812), one card.** This is exactly what Creative's original
+Sound Blaster Pro (1991) did, so it fits the 1992 upgrade.
 
-- It's the Sound Blaster 16 chip, so ready-made General MIDI instrument tables
-  for it already exist.
-- At power-up it behaves exactly like an OPL2, with 9 voices. The full 18
-  voices and stereo can come later.
-- Its built-in timers can raise an IRQ, so they keep the song's tempo and no
-  separate timer chip is needed.
-- **For a real build:** the chip is out of production, but used and pulled
-  chips are easy to find. It needs a companion chip (the YAC512) to turn its
-  output into audio.
+What the card can do:
+
+| | |
+|---|---|
+| Voices | 18 (9 per chip). Each voice is FM: two operators, where an operator is one of the oscillators that build up the sound |
+| Waveforms | 4 per operator (sine plus three variations of it) |
+| Shaping | Attack/decay/sustain/release envelopes, vibrato, tremolo, and per-operator volume |
+| Stereo | Left chip and right chip. Notes can sit left, right, or centre (centre costs two voices, one on each chip) |
+| Audio quality | About 50 kHz output, through one Y3014B converter chip per side |
+| Timers | Two per chip, which can raise an IRQ. One of them keeps the song's tempo |
+
+What that means for General MIDI:
+
+| General MIDI asks for | Dual OPL2 gives |
+|---|---|
+| 24 voices | 18, so the player steals voices on busy passages |
+| 16 channels | All 16 |
+| 128 instruments | All 128, as FM imitations from an instrument table |
+| Drum kit on channel 10 | Each drum is an FM voice with a drum sound |
+| Velocity, volume, expression, sustain, pitch bend | All of them |
+| Panning anywhere | Left, centre, or right only |
+
+**What it sounds like:** early-90s DOS game music. It's bright and
+recognisable, and pianos and strings are FM imitations, not realistic copies.
+
+**Why it's buildable here and now:**
+
+- Both the OPL2 and its converter chip are old-style through-hole parts. Their
+  legs push straight into a breadboard.
+- Both are far more common and cheaper than the OPL3 and its converter.
+- The OPL2's clock is a 3.58 MHz crystal, one of the most common crystals there
+  is.
+- General MIDI instrument tables for the OPL2 are plentiful, because DOS games
+  used them for years.
+
+**For a real build:**
+
+- Neither chip is made any more. You buy pulled or new-old-stock parts from
+  sellers with good reviews, and test what arrives, because re-marked fakes
+  exist.
+- The Yamaha chips expect separate "read" and "write" signals, while the 6502
+  has one read/write wire plus a clock. One small logic chip (a 74HC00) builds
+  the two signals.
+- **Fallback:** if the chips ever get hard to find, a microcontroller or FPGA
+  running an OPL2 emulation can answer at the same registers. To the 6502, it's
+  the same card.
 
 ### Getting songs in
 
@@ -158,16 +196,15 @@ Each step ends with something that runs.
    decoding, and a headless runner that steps the CPU.
 4. **Serial card.** Wired to stdin/stdout, plus a small ROM program that
    echoes what you type.
-5. **Sound card.** Model the OPL3, starting in its 9-voice OPL2 mode with its
-   timers and IRQ, and send its output to the host's audio. A ROM program
-   plays a hard-coded scale.
+5. **Sound card.** Model one OPL2, including its timers and IRQ, and send its
+   output to the host's audio. A ROM program plays a hard-coded scale.
 6. **File memory card.** 1 MB, with the address and data registers. At first,
    the emulator loads a `.mid` straight into it.
 7. **Player.** 6502 code that reads the song from file memory and plays it,
    meeting the contemporary file support list. You type `play` at the
    terminal and hear the song.
 8. **XMODEM/YMODEM upload.** Send a song from the terminal into file memory.
-9. **Full OPL3.** 18 voices and stereo.
+9. **Second OPL2.** 18 voices, with the left and right chips giving stereo.
 
 After step 9, decide what to do next.
 
@@ -178,5 +215,5 @@ Decide these when the code reaches them, not before.
 - **UART chip** on the serial card: the 6551 (the 6502's companion part) or
   something else.
 - **Instrument table:** which existing General MIDI instrument set for the
-  OPL3 to base ours on.
+  OPL2 to base ours on.
 - **Memory map:** pick the smallest layout that works when step 3 arrives.
